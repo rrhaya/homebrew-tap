@@ -1,0 +1,23 @@
+name: Formula
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  formula:
+    runs-on: macos-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Register local tap
+        run: brew tap rrhaya/tap "$GITHUB_WORKSPACE"
+      - name: Check formula
+        run: |
+          brew style rrhaya/tap/clipref
+          brew audit --strict rrhaya/tap/clipref
+      - name: Install and test
+        run: |
+          brew install --build-from-source rrhaya/tap/clipref
+          brew test rrhaya/tap/clipref
+          clipref --version
