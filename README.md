@@ -5,13 +5,13 @@ Requires macOS.
 
 ```sh
 brew install rrhaya/tap/clipref
-clipref --version
+pbe --version
 brew upgrade clipref
 brew uninstall clipref
 ```
 
-Saved files are kept after uninstalling. If you also used the shell installer,
-run `command -v clipref` to check which installation your shell uses.
+Both `pbe` and `clipref` run the same tool. Saved files are kept after uninstalling.
+If you also used the shell installer, run `command -v pbe` to check which installation your shell uses.
 
 Formula tests use `--version` and `--help`; they do not access the clipboard.
 
