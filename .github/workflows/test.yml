@@ -6,10 +6,13 @@ jobs:
   formula:
     runs-on: macos-latest
     timeout-minutes: 15
+    env:
+      HOMEBREW_NO_AUTO_UPDATE: "1"
     steps:
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
+          fetch-depth: 0
       - name: Register local tap
         run: brew tap rrhaya/tap "$GITHUB_WORKSPACE"
       - name: Check formula
@@ -20,4 +23,26 @@ jobs:
         run: |
           brew install --build-from-source rrhaya/tap/clipref
           brew test rrhaya/tap/clipref
+          version=$(clipref --version)
+          test "$(pbe --version)" = "pbe ${version#clipref }"
+      - name: Upgrade from the previous formula
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          previous_formula="$RUNNER_TEMP/clipref-previous.rb"
+          git show "$BASE_SHA:Formula/clipref.rb" > "$previous_formula"
+          if cmp -s "$previous_formula" Formula/clipref.rb; then
+            exit 0
+          fi
+          version=$(clipref --version)
+          tap_formula="$(brew --repo rrhaya/tap)/Formula/clipref.rb"
+          brew uninstall rrhaya/tap/clipref
+          cp "$previous_formula" "$tap_formula"
+          brew install --build-from-source rrhaya/tap/clipref
           clipref --version
+          cp Formula/clipref.rb "$tap_formula"
+          brew upgrade rrhaya/tap/clipref
+          brew test rrhaya/tap/clipref
+          pbe --version
+          test "$(pbe --version)" = "pbe ${version#clipref }"
